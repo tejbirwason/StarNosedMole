@@ -71,7 +71,7 @@ function makeCube() {
 
 // GEOMETRY
 var torsoGeometry = makeCube();
-var non_uniform_scale = new THREE.Matrix4().set(5,0,0,0, 0,5,0,0, 0,0,8,0, 0,0,0,1);
+var non_uniform_scale = new THREE.Matrix4().set(8,0,0,0, 0,8,0,0, 0,0,12,0, 0,0,0,1);
 torsoGeometry.applyMatrix(non_uniform_scale);
 
 // TO-DO: SPECIFY THE REST OF YOUR STAR-NOSE MOLE'S GEOMETRY. 
@@ -81,15 +81,22 @@ torsoGeometry.applyMatrix(non_uniform_scale);
 // Note: The torso has been done for you (but feel free to modify it!)  
 // Hint: Explicity declare new matrices using Matrix4().set     
 
+var headGeometry = makeCube();
+headGeometry.applyMatrix(new THREE.Matrix4().set(4,0,0,0, 0,4,0,0, 0,0,4,0, 0,0,0,1));
+
 
 
 // MATRICES
-var torsoMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,2.5, 0,0,1,0, 0,0,0,1);
+var torsoMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,4, 0,0,1,0, 0,0,0,1);
 
 // TO-DO: INITIALIZE THE REST OF YOUR MATRICES 
 // Note: Use of parent attribute is not allowed.
 // Hint: Keep hierarchies in mind!   
-// Hint: Play around with the headTorsoMatrix values, what changes in the render? Why?         
+// Hint: Play around with the headTorsoMatrix values, what changes in the render? Why?   
+
+var headMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,4, 0,0,1,8, 0,0,0,1);
+var headTorsoMatrix = new THREE.Matrix4();
+headTorsoMatrix.multiplyMatrices(torsoMatrix, headMatrix);
 
 
 
@@ -101,6 +108,10 @@ scene.add(torso);
 // TO-DO: PUT TOGETHER THE REST OF YOUR STAR-NOSED MOLE AND ADD TO THE SCENE!
 // Hint: Hint: Add one piece of geometry at a time, then implement the motion for that part. 
 //             Then you can make sure your hierarchy still works properly after each step.
+
+var head = new THREE.Mesh(headGeometry,normalMaterial);
+head.setMatrix(headTorsoMatrix)
+scene.add(head);
 
 
 
@@ -154,6 +165,7 @@ function updateBody() {
 
       var torsoRotMatrix = new THREE.Matrix4().multiplyMatrices(torsoMatrix,rotateZ);
       torso.setMatrix(torsoRotMatrix); 
+      head.setMatrix(new THREE.Matrix4().multiplyMatrices(torsoRotMatrix,headMatrix));
       break
 
       // TO-DO: IMPLEMENT JUMPCUT/ANIMATION FOR EACH KEY!
