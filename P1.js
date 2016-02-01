@@ -99,6 +99,8 @@ smallTentGeometry.applyMatrix(new THREE.Matrix4().set(0.1,0,0,0, 0,0.1,0,0, 0,0,
 var pawGeometry = makeCube();
 pawGeometry.applyMatrix(new THREE.Matrix4().set(4,0,0,0, 0,2,0,0, 0,0,8,0, 0,0,0,1));
 
+var clawGeometry = makeCube();
+clawGeometry.applyMatrix(new THREE.Matrix4().set(0.3,0,0,0, 0,0.3,0,0, 0,0,3,0, 0,0,0,1));
 
 
 // Helper methods
@@ -141,11 +143,24 @@ var noseFinalMatrix = multiplyMatrices(headTorsoMatrix, noseMatrix);
 var pawMatrix = [];
 pawMatrix[0] = new THREE.Matrix4().set(1,0,0,-7, 0,1,0,-9, 0,0,1,12, 0,0,0,1);
 pawMatrix[1] = new THREE.Matrix4().set(1,0,0,-7, 0,1,0,-9, 0,0,1,-9, 0,0,0,1);
-pawMatrix[2] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,12, 0,0,0,1);
-pawMatrix[3] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,-9, 0,0,0,1);
+pawMatrix[2] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,-9, 0,0,0,1);
+pawMatrix[3] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,12, 0,0,0,1);
 var pawMatrixFinal = [];
 for(var i=0;i<4;i++){
   pawMatrixFinal[i] = multiplyMatrices(torsoMatrix, pawMatrix[i]);
+}
+
+// claws
+var clawMatrix = [];
+var clawMatrixFinal = [];
+var k=0;
+for(var i=0;i<4;i++){
+  var temp = pawMatrixFinal[i];
+  for(var j=0;j<5;j++){
+    clawMatrix[k] = new THREE.Matrix4().set(1,0,0,(j-2)/1.2, 0,1,0,-0.5, 0,0,1,5, 0,0,0,1);
+    clawMatrixFinal[k] = multiplyMatrices(temp, clawMatrix[k]);
+    k++;
+  }
 }
 
 // large tentacles
@@ -237,6 +252,15 @@ for(var i=0;i<4;i++){
   pawMesh[i] = paw;
 }
 
+// claws
+var clawMesh = [];
+for(var i=0;i<20;i++){
+  var claw = new THREE.Mesh(clawGeometry,normalMaterial);
+  claw.setMatrix(clawMatrixFinal[i]);
+  scene.add(claw);
+  clawMesh[i] = claw;
+}
+
 // APPLY DIFFERENT JUMP CUTS/ANIMATIONS TO DIFFERNET KEYS
 // Note: The start of "U" animation has been done for you, you must implement the hiearchy and jumpcut.
 // Hint: There are other ways to manipulate and grab clock values!!
@@ -269,6 +293,7 @@ function init_animation(p_start,p_end,t_length){
 function updateBody() {
   switch(true)
   {
+      // body up/down
       case((key == "U" || key == "E" )&& animate):
       var time = clock.getElapsedTime(); // t seconds passed since the clock started.
 
@@ -300,17 +325,24 @@ function updateBody() {
         var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTM[i]);
         sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
       }
+      var pawRotMatrix = []
       for(var i=0;i<4;i++){
-        var pawRotMatrix = multiplyMatrices(torsoRotMatrix,pawMatrix[i]);
-        pawMesh[i].setMatrix(pawRotMatrix);
+        pawRotMatrix[i] = multiplyMatrices(torsoRotMatrix,pawMatrix[i]);
+        pawMesh[i].setMatrix(pawRotMatrix[i]);
       }
-
-
-
-
+      var k=0;
+      for(var i=0;i<4;i++){
+        var temp = pawRotMatrix[i];
+        for(var j=0;j<5;j++){
+          var clawRotMatrix = multiplyMatrices(temp,clawMatrix[k]);
+          clawMesh[k].setMatrix(clawRotMatrix);
+          k++;
+        }
+      }
       break
 
 
+      // head left/right
       case((key == "H" || key == "G" ) && animate):
       var time = clock.getElapsedTime(); // t seconds passed since the clock started.
 
@@ -342,6 +374,7 @@ function updateBody() {
       break
 
 
+      // tail left/right
       case((key == "T" || key == "V" ) && animate):
       var time = clock.getElapsedTime(); // t seconds passed since the clock started.
 
@@ -358,6 +391,8 @@ function updateBody() {
       tail.setMatrix(tailFinalRotMatrix); 
       break
 
+
+      // tentacles fan out
       case((key == "N" ) && animate):
       var time = clock.getElapsedTime(); // t seconds passed since the clock started.
 
@@ -388,6 +423,38 @@ function updateBody() {
         var smallTentLeftFinalRotMatrix = multiplyMatrices(noseFinalMatrix,smallTentLeftRotMatrix);
         sLTmesh[i].setMatrix(smallTentLeftFinalRotMatrix);
       }
+      break
+
+
+      // dig
+      case((key == "D" ) && animate):
+      var time = clock.getElapsedTime(); // t seconds passed since the clock started.
+
+      if (time > time_end){
+        p = p1;
+        animate = false;
+        break;
+      }
+
+      p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
+
+      var rightPawRotMatrix = multiplyMatrices(pawMatrix[0],rot_x(p));
+      var leftPawRotMatrix = multiplyMatrices(pawMatrix[3],rot_x(p));
+      var rightPawFinalRotMatrix = multiplyMatrices(torsoMatrix,rightPawRotMatrix);
+      var leftPawFinalRotMatrix = multiplyMatrices(torsoMatrix,leftPawRotMatrix);
+      pawMesh[0].setMatrix(rightPawFinalRotMatrix); 
+      pawMesh[3].setMatrix(leftPawFinalRotMatrix);
+
+      for(var i=0;i<5;i++){
+        var clawRotMatrix = multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]);
+        clawMesh[i].setMatrix(multiplyMatrices(clawRotMatrix,rot_y(p*5/4)));
+      }
+      for(var i=15;i<20;i++){
+        var clawRotMatrix = multiplyMatrices(leftPawFinalRotMatrix,clawMatrix[i]);
+        clawMesh[i].setMatrix(multiplyMatrices(clawRotMatrix,rot_y(p*5/4)));
+      }
+
+
       break
       // TO-DO: IMPLEMENT JUMPCUT/ANIMATION FOR EACH KEY!
       // Note: Remember spacebar sets jumpcut/animate!
@@ -427,6 +494,8 @@ keyboard.domElement.addEventListener('keydown',function(event){
     (key == "T")? init_animation(p1,p0,time_length) : (init_animation(0,-Math.PI/5,1), key = "T")} 
   else if(keyboard.eventMatches(event,"N")){ 
     (key == "N")? init_animation(p1,p0,time_length) : (init_animation(0,Math.PI/5,1), key = "N")} 
+  else if(keyboard.eventMatches(event,"D")){ 
+    (key == "D")? init_animation(p1,p0,time_length) : (init_animation(0,Math.PI/5,1), key = "D")} 
   // TO-DO: BIND KEYS TO YOUR JUMP CUTS AND ANIMATIONS
   // Note: Remember spacebar sets jumpcut/animate! 
   // Hint: Look up "threex.keyboardstate by Jerome Tienne" for more info.
