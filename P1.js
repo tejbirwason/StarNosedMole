@@ -84,6 +84,9 @@ torsoGeometry.applyMatrix(non_uniform_scale);
 var headGeometry = makeCube();
 headGeometry.applyMatrix(new THREE.Matrix4().set(4,0,0,0, 0,4,0,0, 0,0,4,0, 0,0,0,1));
 
+var noseGeometry = makeCube();
+noseGeometry.applyMatrix(new THREE.Matrix4().set(2,0,0,0, 0,2,0,0, 0,0,1.5,0, 0,0,0,1));
+
 
 
 // MATRICES
@@ -98,6 +101,12 @@ var headMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,4, 0,0,1,8, 0,0,0,1);
 var headTorsoMatrix = new THREE.Matrix4();
 headTorsoMatrix.multiplyMatrices(torsoMatrix, headMatrix);
 
+var noseMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,0, 0,0,1,2.5, 0,0,0,1);
+var noseHeadMatrix = new THREE.Matrix4();
+noseHeadMatrix.multiplyMatrices(headMatrix, noseMatrix);
+var noseFinalMatrix = new THREE.Matrix4();
+noseFinalMatrix.multiplyMatrices(torsoMatrix, noseHeadMatrix);
+
 
 
 // CREATE BODY
@@ -110,8 +119,12 @@ scene.add(torso);
 //             Then you can make sure your hierarchy still works properly after each step.
 
 var head = new THREE.Mesh(headGeometry,normalMaterial);
-head.setMatrix(headTorsoMatrix)
+head.setMatrix(headTorsoMatrix);
 scene.add(head);
+
+var nose = new THREE.Mesh(noseGeometry,normalMaterial);
+nose.setMatrix(noseFinalMatrix);
+scene.add(nose);
 
 
 
@@ -147,7 +160,7 @@ function init_animation(p_start,p_end,t_length){
 function updateBody() {
   switch(true)
   {
-      case(key == "U" && animate):
+      case((key == "U" || key == "E" )&& animate):
       var time = clock.getElapsedTime(); // t seconds passed since the clock started.
 
       if (time > time_end){
@@ -165,7 +178,34 @@ function updateBody() {
 
       var torsoRotMatrix = new THREE.Matrix4().multiplyMatrices(torsoMatrix,rotateZ);
       torso.setMatrix(torsoRotMatrix); 
-      head.setMatrix(new THREE.Matrix4().multiplyMatrices(torsoRotMatrix,headMatrix));
+      var headRotMatrix = new THREE.Matrix4().multiplyMatrices(torsoRotMatrix,headMatrix);
+      head.setMatrix(headRotMatrix);
+      var noseRotMatrix = new THREE.Matrix4().multiplyMatrices(headRotMatrix,noseMatrix);
+      nose.setMatrix(noseRotMatrix);
+      break
+
+
+      case((key == "H" || key == "G" ) && animate):
+      var time = clock.getElapsedTime(); // t seconds passed since the clock started.
+
+      if (time > time_end){
+        p = p1;
+        animate = false;
+        break;
+      }
+
+      p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
+
+      var rotateY = new THREE.Matrix4().set(Math.cos(-p),0, Math.sin(-p),  0, 
+                                            0,          1,        0,        0, 
+                                            -Math.sin(-p),0, Math.cos(-p), 0,
+                                            0,        0,         0,        1);
+
+      var headRotMatrix = new THREE.Matrix4().multiplyMatrices(headMatrix,rotateY);
+      var headFinalRotMatrix = new THREE.Matrix4().multiplyMatrices(torsoMatrix,headRotMatrix);
+      head.setMatrix(headFinalRotMatrix); 
+      var noseRotMatrix = new THREE.Matrix4().multiplyMatrices(headFinalRotMatrix,noseMatrix);
+      nose.setMatrix(noseRotMatrix);
       break
 
       // TO-DO: IMPLEMENT JUMPCUT/ANIMATION FOR EACH KEY!
@@ -194,6 +234,12 @@ keyboard.domElement.addEventListener('keydown',function(event){
     camera.lookAt(scene.position);}
   else if(keyboard.eventMatches(event,"U")){ 
     (key == "U")? init_animation(p1,p0,time_length) : (init_animation(0,Math.PI/4,1), key = "U")}  
+  else if(keyboard.eventMatches(event,"E")){ 
+    (key == "E")? init_animation(p1,p0,time_length) : (init_animation(0,-Math.PI/4,1), key = "E")} 
+  else if(keyboard.eventMatches(event,"H")){ 
+    (key == "H")? init_animation(p1,p0,time_length) : (init_animation(0,Math.PI/4,1), key = "H")}   
+  else if(keyboard.eventMatches(event,"G")){ 
+    (key == "G")? init_animation(p1,p0,time_length) : (init_animation(0,-Math.PI/4,1), key = "G")} 
 
 
   // TO-DO: BIND KEYS TO YOUR JUMP CUTS AND ANIMATIONS
