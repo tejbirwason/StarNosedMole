@@ -96,9 +96,12 @@ lrgTentGeometry.applyMatrix(new THREE.Matrix4().set(0.2,0,0,0, 0,0.2,0,0, 0,0,4,
 var smallTentGeometry = makeCube();
 smallTentGeometry.applyMatrix(new THREE.Matrix4().set(0.1,0,0,0, 0,0.1,0,0, 0,0,3,0, 0,0,0,1));
 
+var pawGeometry = makeCube();
+pawGeometry.applyMatrix(new THREE.Matrix4().set(4,0,0,0, 0,2,0,0, 0,0,8,0, 0,0,0,1));
 
 
-// MATRICES
+
+// Helper methods
 function rot_x(angle){
     return new THREE.Matrix4().set(1,0,0,0, 0,Math.cos(angle),-Math.sin(angle),0, 0,Math.sin(angle),Math.cos(angle),0, 0,0,0,1);
 }
@@ -112,6 +115,10 @@ function multiplyMatrices(a,b){
     return new THREE.Matrix4().multiplyMatrices(a, b);
 }
 
+
+// MATRICES
+
+// torso
 var torsoMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,8, 0,0,1,0, 0,0,0,1);
 
 // TO-DO: INITIALIZE THE REST OF YOUR MATRICES 
@@ -130,12 +137,22 @@ var tailTorsoMatrix = multiplyMatrices(torsoMatrix, tailMatrix);
 var noseMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,0, 0,0,1,5, 0,0,0,1);
 var noseFinalMatrix = multiplyMatrices(headTorsoMatrix, noseMatrix);
 
+// paws (clockwise order starting from front right)
+var pawMatrix = [];
+pawMatrix[0] = new THREE.Matrix4().set(1,0,0,-7, 0,1,0,-9, 0,0,1,12, 0,0,0,1);
+pawMatrix[1] = new THREE.Matrix4().set(1,0,0,-7, 0,1,0,-9, 0,0,1,-9, 0,0,0,1);
+pawMatrix[2] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,12, 0,0,0,1);
+pawMatrix[3] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,-9, 0,0,0,1);
+var pawMatrixFinal = [];
+for(var i=0;i<4;i++){
+  pawMatrixFinal[i] = multiplyMatrices(torsoMatrix, pawMatrix[i]);
+}
+
 // large tentacles
 var lRTM = [];
 var lRTMfinal = [];
 var lLTM = [];
 var lLTMfinal =[];
-
 for(var i=0;i<9;i++){
   lRTM[i] = new THREE.Matrix4().set(1,0,0,2, 0,1,0,(i-4)/2.5, 0,0,1,3, 0,0,0,1);
   lLTM[i] = new THREE.Matrix4().set(1,0,0,-2, 0,1,0,(i-4)/2.5, 0,0,1,3, 0,0,0,1);
@@ -148,13 +165,13 @@ var sRTM = [];
 var sRTMfinal = [];
 var sLTM = [];
 var sLTMfinal =[];
-
 for(var i=0;i<2;i++){
   sRTM[i] = new THREE.Matrix4().set(1,0,0,1, 0,1,0,1-2*i, 0,0,1,3, 0,0,0,1);
   sLTM[i] = new THREE.Matrix4().set(1,0,0,-1, 0,1,0,2*i-1, 0,0,1,3, 0,0,0,1);
   sRTMfinal[i] = multiplyMatrices(noseFinalMatrix, sRTM[i]);
   sLTMfinal[i] = multiplyMatrices(noseFinalMatrix, sLTM[i]);
 }
+
 
 
 // CREATE BODY
@@ -211,6 +228,14 @@ for(var i=0;i<2;i++){
   sLTmesh[i] = smallTentLeft;
 }
 
+// paws
+var pawMesh = [];
+for(var i=0;i<4;i++){
+  var paw = new THREE.Mesh(pawGeometry,normalMaterial);
+  paw.setMatrix(pawMatrixFinal[i]);
+  scene.add(paw);
+  pawMesh[i] = paw;
+}
 
 // APPLY DIFFERENT JUMP CUTS/ANIMATIONS TO DIFFERNET KEYS
 // Note: The start of "U" animation has been done for you, you must implement the hiearchy and jumpcut.
@@ -275,6 +300,12 @@ function updateBody() {
         var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTM[i]);
         sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
       }
+      for(var i=0;i<4;i++){
+        var pawRotMatrix = multiplyMatrices(torsoRotMatrix,pawMatrix[i]);
+        pawMesh[i].setMatrix(pawRotMatrix);
+      }
+
+
 
 
       break
