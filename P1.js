@@ -88,7 +88,7 @@ var noseGeometry = makeCube();
 noseGeometry.applyMatrix(new THREE.Matrix4().set(4,0,0,0, 0,4,0,0, 0,0,3,0, 0,0,0,1));
 
 var tailGeometry = makeCube();
-tailGeometry.applyMatrix(new THREE.Matrix4().set(2,0,0,0, 0,2,0,0, 0,0,12,0, 0,0,0,1));
+tailGeometry.applyMatrix(new THREE.Matrix4().set(2,0,0,0, 0,2,0,0, 0,0,16,0, 0,0,0,1));
 
 var lrgTentGeometry = makeCube();
 lrgTentGeometry.applyMatrix(new THREE.Matrix4().set(0.2,0,0,0, 0,0.2,0,0, 0,0,4,0, 0,0,0,1));
@@ -132,7 +132,7 @@ var headMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,8, 0,0,1,16, 0,0,0,1);
 var headTorsoMatrix = multiplyMatrices(torsoMatrix, headMatrix);
 
 // tail
-var tailMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,-6, 0,0,1,-16, 0,0,0,1);
+var tailMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,-6, 0,0,1,-14, 0,0,0,1);
 var tailTorsoMatrix = multiplyMatrices(torsoMatrix, tailMatrix);
 
 // nose
