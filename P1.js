@@ -128,11 +128,13 @@ var torsoRotMatrix = torsoMatrix
 var headMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,2, 0,0,1,16, 0,0,0,1);
 var headTorsoMatrix = multiplyMatrices(torsoMatrix, headMatrix);
 var headRotMatrix = headTorsoMatrix
+var headAloneRotMatrix = headMatrix
 
 // tail
 var tailMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,-6, 0,0,1,-14, 0,0,0,1);
 var tailTorsoMatrix = multiplyMatrices(torsoMatrix, tailMatrix);
 var tailRotMatrix = tailTorsoMatrix
+var tailAloneRotMatrix = tailMatrix
 
 // nose
 var noseMatrix = new THREE.Matrix4().set(1,0,0,0, 0,1,0,0, 0,0,1,5, 0,0,0,1);
@@ -169,9 +171,11 @@ for(var i=0;i<4;i++){
 var lRTM = []; // large right tentacles matrix
 var lRTMfinal = [];
 var lRTRotMatrix = []; 
+var lRTMalone = [];
 var lLTM = []; // large left tentacles matrix
 var lLTMfinal =[];
 var lLTRotMatrix = []; 
+var lLTMalone = [];
 for(var i=0;i<9;i++){
   lRTM[i] = new THREE.Matrix4().set(1,0,0,2, 0,1,0,(i-4)/2.5, 0,0,1,3, 0,0,0,1);
   lLTM[i] = new THREE.Matrix4().set(1,0,0,-2, 0,1,0,(i-4)/2.5, 0,0,1,3, 0,0,0,1);
@@ -179,19 +183,25 @@ for(var i=0;i<9;i++){
   lLTMfinal[i] = multiplyMatrices(noseFinalMatrix, lLTM[i]);
   lRTRotMatrix[i] = lRTMfinal[i];
   lLTRotMatrix[i] = lLTMfinal[i];
+  lRTMalone[i] = lRTM[i];
+  lLTMalone[i] = lLTM[i];
 }
 
 // small tentacles
 var sRTM = []; // small right tentacles matrix
 var sRTMfinal = [];
+var sRTMalone = [];
 var sLTM = []; // small left tentacles matrix
 var sLTMfinal =[];
+var sLTMalone = [];
 
 for(var i=0;i<2;i++){
   sRTM[i] = new THREE.Matrix4().set(1,0,0,1, 0,1,0,1-2*i, 0,0,1,3, 0,0,0,1);
   sLTM[i] = new THREE.Matrix4().set(1,0,0,-1, 0,1,0,2*i-1, 0,0,1,3, 0,0,0,1);
   sRTMfinal[i] = multiplyMatrices(noseFinalMatrix, sRTM[i]);
   sLTMfinal[i] = multiplyMatrices(noseFinalMatrix, sLTM[i]);
+  sRTMalone[i] = sRTM[i];
+  sLTMalone[i] = sLTM[i];
 }
 
 
@@ -313,20 +323,20 @@ function updateBody() {
       torso.setMatrix(torsoRotMatrix); 
       tailRotMatrix = multiplyMatrices(torsoRotMatrix,tailMatrix);
       tail.setMatrix(tailRotMatrix);
-      headRotMatrix = multiplyMatrices(torsoRotMatrix,headMatrix);
+      headRotMatrix = multiplyMatrices(torsoRotMatrix,headAloneRotMatrix);
       head.setMatrix(headRotMatrix);
       noseRotMatrix = multiplyMatrices(headRotMatrix,noseMatrix);
       nose.setMatrix(noseRotMatrix);
       for(var i=0;i<9;i++){
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTM[i]);
+        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
         lRTmesh[i].setMatrix(lRTRotMatrix[i]);
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTM[i]);
+        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
         lLTmesh[i].setMatrix(lLTRotMatrix[i]);
       }
       for(var i=0;i<2;i++){
-        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTM[i]);
+        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
         sRTmesh[i].setMatrix(smallRightTentRotMatrix);
-        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTM[i]);
+        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
         sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
       }
       for(var i=0;i<4;i++){
@@ -362,15 +372,15 @@ function updateBody() {
       noseRotMatrix = multiplyMatrices(headRotMatrix,noseMatrix);
       nose.setMatrix(noseRotMatrix);
       for(var i=0;i<9;i++){
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTM[i]);
+        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
         lRTmesh[i].setMatrix(lRTRotMatrix[i]);
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTM[i]);
+        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
         lLTmesh[i].setMatrix(lLTRotMatrix[i]);
       }
       for(var i=0;i<2;i++){
-        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTM[i]);
+        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
         sRTmesh[i].setMatrix(smallRightTentRotMatrix);
-        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTM[i]);
+        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
         sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
       }
       break
@@ -388,8 +398,8 @@ function updateBody() {
 
       p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
 
-      tailRotMatrix = multiplyMatrices(tailMatrix,rot_y(-p));
-      var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailRotMatrix);
+      tailAloneRotMatrix = multiplyMatrices(tailMatrix,rot_y(-p));
+      var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailAloneRotMatrix);
       tail.setMatrix(tailFinalRotMatrix); 
       break
 
@@ -407,22 +417,22 @@ function updateBody() {
       p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
 
       for(var i=0;i<9;i++){
-        var lrgTentRightRotMatrix = multiplyMatrices(lRTM[i],rot_y(p));
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lrgTentRightRotMatrix);
+        lRTMalone[i] = multiplyMatrices(lRTM[i],rot_y(p));
+        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
         lRTmesh[i].setMatrix(lRTRotMatrix[i]); 
 
-        var lrgTentLeftRotMatrix = multiplyMatrices(lLTM[i],rot_y(-p));
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lrgTentLeftRotMatrix);
+        lLTMalone[i] = multiplyMatrices(lLTM[i],rot_y(-p));
+        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
         lLTmesh[i].setMatrix(lLTRotMatrix[i]);
       }
 
       for(var i=0;i<2;i++){
-        var smallTentRightRotMatrix = multiplyMatrices(sRTM[i],rot_y(p));
-        var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,smallTentRightRotMatrix);
+        sRTMalone[i] = multiplyMatrices(sRTM[i],rot_y(p));
+        var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
         sRTmesh[i].setMatrix(smallTentRightFinalRotMatrix); 
 
-        var smallTentLeftRotMatrix = multiplyMatrices(sLTM[i],rot_y(-p));
-        var smallTentLeftFinalRotMatrix = multiplyMatrices(noseRotMatrix,smallTentLeftRotMatrix);
+        sLTMalone[i] = multiplyMatrices(sLTM[i],rot_y(-p));
+        var smallTentLeftFinalRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
         sLTmesh[i].setMatrix(smallTentLeftFinalRotMatrix);
       }
       break
@@ -523,23 +533,24 @@ function updateBody() {
 
       //tentacles fan out
       for(var i=0;i<9;i++){
-        var lrgTentRightRotMatrix = multiplyMatrices(lRTM[i],rot_y(p));
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lrgTentRightRotMatrix);
+        lRTMalone[i] = multiplyMatrices(lRTM[i],rot_y(p));
+        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
         lRTmesh[i].setMatrix(lRTRotMatrix[i]); 
 
-        var lrgTentLeftRotMatrix = multiplyMatrices(lLTM[i],rot_y(-p));
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lrgTentLeftRotMatrix);
+        lLTMalone[i] = multiplyMatrices(lLTM[i],rot_y(-p));
+        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
         lLTmesh[i].setMatrix(lLTRotMatrix[i]);
       }
       for(var i=0;i<2;i++){
-        var smallTentRightRotMatrix = multiplyMatrices(sRTM[i],rot_y(p));
-        var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,smallTentRightRotMatrix);
+        sRTMalone[i] = multiplyMatrices(sRTM[i],rot_y(p));
+        var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
         sRTmesh[i].setMatrix(smallTentRightFinalRotMatrix); 
 
-        var smallTentLeftRotMatrix = multiplyMatrices(sLTM[i],rot_y(-p));
-        var smallTentLeftFinalRotMatrix = multiplyMatrices(noseRotMatrix,smallTentLeftRotMatrix);
+        sLTMalone[i] = multiplyMatrices(sLTM[i],rot_y(-p));
+        var smallTentLeftFinalRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
         sLTmesh[i].setMatrix(smallTentLeftFinalRotMatrix);
       }
+
       }
 
       // next half swim
@@ -612,10 +623,27 @@ function updateBody() {
       // head back to original position
       headRotate(-pawAngle);
 
+      //tentacles fan in
+      for(var i=0;i<9;i++){
+        lRTMalone[i] = multiplyMatrices(lRTM[i],rot_y(-pawAngle));
+        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
+        lRTmesh[i].setMatrix(lRTRotMatrix[i]); 
+
+        lLTMalone[i] = multiplyMatrices(lLTM[i],rot_y(pawAngle));
+        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
+        lLTmesh[i].setMatrix(lLTRotMatrix[i]);
+      }
+      for(var i=0;i<2;i++){
+        sRTMalone[i] = multiplyMatrices(sRTM[i],rot_y(-pawAngle));
+        var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
+        sRTmesh[i].setMatrix(smallTentRightFinalRotMatrix); 
+
+        sLTMalone[i] = multiplyMatrices(sLTM[i],rot_y(pawAngle));
+        var smallTentLeftFinalRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
+        sLTmesh[i].setMatrix(smallTentLeftFinalRotMatrix);
       }
 
-
-
+      }
 
       break
       // TO-DO: IMPLEMENT JUMPCUT/ANIMATION FOR EACH KEY!
@@ -635,15 +663,15 @@ function headRotate(angle){
       noseRotMatrix = multiplyMatrices(headRotMatrix,noseMatrix);
       nose.setMatrix(noseRotMatrix);
       for(var i=0;i<9;i++){
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTM[i]);
+        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
         lRTmesh[i].setMatrix(lRTRotMatrix[i]);
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTM[i]);
+        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
         lLTmesh[i].setMatrix(lLTRotMatrix[i]);
       }
       for(var i=0;i<2;i++){
-        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTM[i]);
+        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
         sRTmesh[i].setMatrix(smallRightTentRotMatrix);
-        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTM[i]);
+        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
         sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
       }
 }
