@@ -149,9 +149,11 @@ pawMatrix[2] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,-9, 0,0,0,1);
 pawMatrix[3] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,12, 0,0,0,1);
 var pawMatrixFinal = [];
 var pawRotMatrix = [];
+var pawAloneRotMatrix = [];
 for(var i=0;i<4;i++){
   pawMatrixFinal[i] = multiplyMatrices(torsoMatrix, pawMatrix[i]);
   pawRotMatrix[i] = pawMatrixFinal[i];
+  pawAloneRotMatrix[i] = pawMatrix[i];
 }
 
 // claws
@@ -194,7 +196,6 @@ var sRTMalone = [];
 var sLTM = []; // small left tentacles matrix
 var sLTMfinal =[];
 var sLTMalone = [];
-
 for(var i=0;i<2;i++){
   sRTM[i] = new THREE.Matrix4().set(1,0,0,1, 0,1,0,1-2*i, 0,0,1,3, 0,0,0,1);
   sLTM[i] = new THREE.Matrix4().set(1,0,0,-1, 0,1,0,2*i-1, 0,0,1,3, 0,0,0,1);
@@ -203,8 +204,6 @@ for(var i=0;i<2;i++){
   sRTMalone[i] = sRTM[i];
   sLTMalone[i] = sLTM[i];
 }
-
-
 
 // create torso
 var torso = new THREE.Mesh(torsoGeometry,normalMaterial);
@@ -340,7 +339,7 @@ function updateBody() {
         sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
       }
       for(var i=0;i<4;i++){
-        pawRotMatrix[i] = multiplyMatrices(torsoRotMatrix,pawMatrix[i]);
+        pawRotMatrix[i] = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[i]);
         pawMesh[i].setMatrix(pawRotMatrix[i]);
       }
       var k=0;
@@ -450,10 +449,10 @@ function updateBody() {
 
       p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
 
-      var rightPawRotMatrix = multiplyMatrices(pawMatrix[0],rot_x(p));
-      var leftPawRotMatrix = multiplyMatrices(pawMatrix[3],rot_x(p));
-      var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
-      var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
+      pawAloneRotMatrix[0] = multiplyMatrices(pawMatrix[0],rot_x(p));
+      pawAloneRotMatrix[3] = multiplyMatrices(pawMatrix[3],rot_x(p));
+      var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[0]);
+      var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[3]);
       pawMesh[0].setMatrix(rightPawFinalRotMatrix); 
       pawMesh[3].setMatrix(leftPawFinalRotMatrix);
 
