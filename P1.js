@@ -146,8 +146,10 @@ pawMatrix[1] = new THREE.Matrix4().set(1,0,0,-7, 0,1,0,-9, 0,0,1,-9, 0,0,0,1);
 pawMatrix[2] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,-9, 0,0,0,1);
 pawMatrix[3] = new THREE.Matrix4().set(1,0,0,7, 0,1,0,-9, 0,0,1,12, 0,0,0,1);
 var pawMatrixFinal = [];
+var pawRotMatrix = [];
 for(var i=0;i<4;i++){
   pawMatrixFinal[i] = multiplyMatrices(torsoMatrix, pawMatrix[i]);
+  pawRotMatrix[i] = pawMatrixFinal[i];
 }
 
 // claws
@@ -277,6 +279,7 @@ var time_start; // start time of animation
 var time_end; // end time of animation
 var p; // current frame
 var animate = false; // animate?
+var jumpcut = false;
 
 // function init_animation()
 // Initializes parameters and sets animate flag to true.
@@ -295,7 +298,7 @@ function updateBody() {
   switch(true)
   {
       // body up/down
-      case((key == "U" || key == "E" )&& animate):
+      case((key == "U" || key == "E" )&& animate && !jumpcut):
       var time = clock.getElapsedTime(); // t seconds passed since the clock started.
 
       if (time > time_end){
@@ -326,16 +329,14 @@ function updateBody() {
         var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTM[i]);
         sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
       }
-      var pawRotMatrix = []
       for(var i=0;i<4;i++){
         pawRotMatrix[i] = multiplyMatrices(torsoRotMatrix,pawMatrix[i]);
         pawMesh[i].setMatrix(pawRotMatrix[i]);
       }
       var k=0;
       for(var i=0;i<4;i++){
-        var temp = pawRotMatrix[i];
         for(var j=0;j<5;j++){
-          var clawRotMatrix = multiplyMatrices(temp,clawMatrix[k]);
+          var clawRotMatrix = multiplyMatrices(pawRotMatrix[i],clawMatrix[k]);
           clawMesh[k].setMatrix(clawRotMatrix);
           k++;
         }
@@ -458,7 +459,6 @@ function updateBody() {
 
       // swim
       case((key == "S" ) && animate):
-
       var time = clock.getElapsedTime(); // t seconds passed since the clock started.
 
       if (time > time_end){
@@ -469,14 +469,24 @@ function updateBody() {
 
       p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
 
+      pawAngle = (Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
+
+      tailAngle = (2*Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
+
+      headAngle = (2*Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
+
+      tailStraightAngle = (-Math.PI/5)*((time-time_start)/time_length) + Math.PI/5;
+
+      var rightPawFinalRotMatrix;
+      var leftPawFinalRotMatrix;
       // first half swim
       if(sCount%3 == 0){
         console.log("First");
 
       var rightPawRotMatrix = multiplyMatrices(pawMatrix[1],rot_x(p));
       var leftPawRotMatrix = multiplyMatrices(pawMatrix[3],rot_x(p));
-      var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
-      var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
+      rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
+      leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
       pawMesh[1].setMatrix(rightPawFinalRotMatrix); 
       pawMesh[3].setMatrix(leftPawFinalRotMatrix);
 
@@ -536,21 +546,25 @@ function updateBody() {
       else if (sCount%3 == 1){
         console.log("Second");
 
-
-      // restore paws
-      var rightPawRotMatrix = multiplyMatrices(pawMatrix[1],rot_x(-p));
-      var leftPawRotMatrix = multiplyMatrices(pawMatrix[3],rot_x(-p));
+        //back to original postion for paws
+      var rightPawRotMatrix = multiplyMatrices(pawMatrix[1],rot_x(-pawAngle));
+      var leftPawRotMatrix = multiplyMatrices(pawMatrix[3],rot_x(-pawAngle));
       var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
       var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
       pawMesh[1].setMatrix(rightPawFinalRotMatrix); 
       pawMesh[3].setMatrix(leftPawFinalRotMatrix);
-
       for(var i=5;i<10;i++){
         clawMesh[i].setMatrix(multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]));
       }
       for(var i=15;i<20;i++){
         clawMesh[i].setMatrix(multiplyMatrices(leftPawFinalRotMatrix,clawMatrix[i]));
       }
+
+      //tail move all the way right
+      tailRotMatrix = multiplyMatrices(tailMatrix,rot_y(tailAngle));
+      var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailRotMatrix);
+      tail.setMatrix(tailFinalRotMatrix);
+
 
       // activate opposite paws
       var rightPawRotMatrix = multiplyMatrices(pawMatrix[0],rot_x(p));
@@ -559,7 +573,6 @@ function updateBody() {
       var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
       pawMesh[0].setMatrix(rightPawFinalRotMatrix); 
       pawMesh[2].setMatrix(leftPawFinalRotMatrix);
-
       for(var i=0;i<5;i++){
         clawMesh[i].setMatrix(multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]));
       }
@@ -567,13 +580,41 @@ function updateBody() {
         clawMesh[i].setMatrix(multiplyMatrices(leftPawFinalRotMatrix,clawMatrix[i]));
       }
 
+      //tentacles stay open
+
+      //turn head all the way left
+      headRotate(headAngle);
 
       }
-
       // go to original
       else if(sCount%3 == 2){
         console.log("Third");
+
+        //back to original postion for paws
+      var rightPawRotMatrix = multiplyMatrices(pawMatrix[0],rot_x(-pawAngle));
+      var leftPawRotMatrix = multiplyMatrices(pawMatrix[2],rot_x(-pawAngle));
+      var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
+      var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
+      pawMesh[0].setMatrix(rightPawFinalRotMatrix); 
+      pawMesh[2].setMatrix(leftPawFinalRotMatrix);
+      for(var i=0;i<5;i++){
+        clawMesh[i].setMatrix(multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]));
       }
+      for(var i=10;i<15;i++){
+        clawMesh[i].setMatrix(multiplyMatrices(leftPawFinalRotMatrix,clawMatrix[i]));
+      }
+
+      // tail back to normal postion
+      tailRotMatrix = multiplyMatrices(tailMatrix,rot_y(tailStraightAngle));
+      var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailRotMatrix);
+      tail.setMatrix(tailFinalRotMatrix);
+
+      // head back to original position
+      headRotate(-pawAngle);
+
+      }
+
+
 
 
       break
@@ -585,6 +626,26 @@ function updateBody() {
     default:
       break;
   }
+}
+
+function headRotate(angle){
+      headAloneRotMatrix = multiplyMatrices(headMatrix,rot_y(angle));
+      headRotMatrix = multiplyMatrices(torsoRotMatrix,headAloneRotMatrix);
+      head.setMatrix(headRotMatrix); 
+      noseRotMatrix = multiplyMatrices(headRotMatrix,noseMatrix);
+      nose.setMatrix(noseRotMatrix);
+      for(var i=0;i<9;i++){
+        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTM[i]);
+        lRTmesh[i].setMatrix(lRTRotMatrix[i]);
+        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTM[i]);
+        lLTmesh[i].setMatrix(lLTRotMatrix[i]);
+      }
+      for(var i=0;i<2;i++){
+        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTM[i]);
+        sRTmesh[i].setMatrix(smallRightTentRotMatrix);
+        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTM[i]);
+        sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
+      }
 }
 
 // LISTEN TO KEYBOARD
@@ -602,6 +663,9 @@ keyboard.domElement.addEventListener('keydown',function(event){
   else if(keyboard.eventMatches(event,"0")){    // 0: Set camera to neutral position, view reset
     camera.position.set(45,0,0);
     camera.lookAt(scene.position);}
+  else if(keyboard.eventMatches(event," ")){ 
+    jumpcut = !jumpcut;
+    console.log(jumpcut);} 
   else if(keyboard.eventMatches(event,"U")){ 
     (key == "U")? init_animation(p1,p0,time_length) : (init_animation(0,Math.PI/4,1), key = "U")}  
   else if(keyboard.eventMatches(event,"E")){ 
@@ -619,13 +683,9 @@ keyboard.domElement.addEventListener('keydown',function(event){
   else if(keyboard.eventMatches(event,"D")){ 
     (key == "D")? init_animation(p1,p0,time_length) : (init_animation(0,Math.PI/5,1), key = "D")} 
   else if(keyboard.eventMatches(event,"S")){ 
-    if(key == "S"){ 
-      init_animation(0,Math.PI/5,2);
-    } else { 
       init_animation(0,Math.PI/5,1);
-    } 
-    key = "S"; 
-    sCount++;
+      key = "S"; 
+      sCount++;
   } 
   // TO-DO: BIND KEYS TO YOUR JUMP CUTS AND ANIMATIONS
   // Note: Remember spacebar sets jumpcut/animate! 
