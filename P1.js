@@ -296,27 +296,27 @@ function updateBody() {
 
   switch(true)
   {
-      // body up/down
+    // body up/down
     case((key == "U" || key == "E" )&& animate):
       torsoRotate(-p);
       break
 
-      // head left/right
+    // head left/right
     case((key == "H" || key == "G" ) && animate):
       headRotate(-p);
       break
 
-      // tail left/right
+    // tail left/right
     case((key == "T" || key == "V" ) && animate):
       tailRotate(-p);
       break
 
-      // tentacles fan out
+    // tentacles fan out
     case((key == "N" ) && animate):
       tentaclesRotate(p);
       break
 
-      // swim
+    // swim
     case((key == "S" ) && animate):
       if (jumpcut){
         p = p1;
@@ -331,51 +331,35 @@ function updateBody() {
         tailStraightAngle = (-Math.PI/5)*((time-time_start)/time_length) + Math.PI/5;
       }
 
-      // first half swim
       if(sCount%3 == 0){
         rotatePaw(1,p);
         rotatePaw(3,p);
-
         //head move right
         headRotate(-p);
-
         //tail move left
         tailRotate(-p);
-
         //tentacles fan out
         tentaclesRotate(p);
-
       }
-
-      // next half swim
       else if (sCount%3 == 1){
         rotatePaw(1,-pawAngle);
         rotatePaw(3,-pawAngle);
-
         //tail move all the way right
         tailRotate(tailAngle);
-
-
         // activate opposite paws
         rotatePaw(0,p);
         rotatePaw(2,p);
-
         //turn head all the way left
         headRotate(headAngle);
-
       }
-      // go to original
       else if(sCount%3 == 2){
-        //back to original postion for paws
+        //restore original postion for paws
         rotatePaw(0,-pawAngle);
         rotatePaw(2,-pawAngle);
-
         // tail back to normal postion
         tailRotate(tailStraightAngle);
-
         // head back to original position
         headRotate(-pawAngle);
-
         //tentacles fan in
         tentaclesRotate(-pawAngle);
       }
@@ -387,7 +371,7 @@ function updateBody() {
       digPaw(3,p);
       break;
 
-      default:
+    default:
         break;
     }
 }

@@ -9,4 +9,8 @@ listed all people with whom I/we have had significant discussions about the proj
 
 Complete:
 
-Incomplete:
+- All functionality requirements
+
+Extra Work:
+
+- None
