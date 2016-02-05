@@ -74,13 +74,6 @@ var torsoGeometry = makeCube();
 var non_uniform_scale = new THREE.Matrix4().set(16,0,0,0, 0,16,0,0, 0,0,24,0, 0,0,0,1);
 torsoGeometry.applyMatrix(non_uniform_scale);
 
-// TO-DO: SPECIFY THE REST OF YOUR STAR-NOSE MOLE'S GEOMETRY. 
-// Note: You will be using transformation matrices to set the shape. 
-// Note: You are not allowed to use the tools Three.js provides for 
-//       rotation, translation and scaling.
-// Note: The torso has been done for you (but feel free to modify it!)  
-// Hint: Explicity declare new matrices using Matrix4().set     
-
 var headGeometry = makeCube();
 headGeometry.applyMatrix(new THREE.Matrix4().set(8,0,0,0, 0,8,0,0, 0,0,8,0, 0,0,0,1));
 
@@ -101,21 +94,6 @@ pawGeometry.applyMatrix(new THREE.Matrix4().set(4,0,0,0, 0,2,0,0, 0,0,8,0, 0,0,0
 
 var clawGeometry = makeCube();
 clawGeometry.applyMatrix(new THREE.Matrix4().set(0.3,0,0,0, 0,0.3,0,0, 0,0,3,0, 0,0,0,1));
-
-
-// Helper methods
-function rot_x(angle){
-    return new THREE.Matrix4().set(1,0,0,0, 0,Math.cos(angle),-Math.sin(angle),0, 0,Math.sin(angle),Math.cos(angle),0, 0,0,0,1);
-}
-function rot_z(angle){
-    return new THREE.Matrix4().set(Math.cos(angle),-Math.sin(angle),0,0, Math.sin(angle),Math.cos(angle),0,0, 0,0,1,0, 0,0,0,1);
-}
-function rot_y(angle){
-    return new THREE.Matrix4().set(Math.cos(angle),0,Math.sin(angle),0, 0,1,0,0,  -Math.sin(angle),0,Math.cos(angle),0, 0,0,0,1);
-}
-function multiplyMatrices(a,b){
-    return new THREE.Matrix4().multiplyMatrices(a, b);
-}
 
 
 // MATRICES
@@ -305,131 +283,41 @@ function init_animation(p_start,p_end,t_length){
 
 function updateBody() {
   var time = clock.getElapsedTime(); // t seconds passed since the clock started.
-
   if (time > time_end){
     p = p1;
     animate = false;
     return;
   }
-
   if (jumpcut){
     p = p1;
   } else {
     p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
   }
+
   switch(true)
   {
       // body up/down
-      case((key == "U" || key == "E" )&& animate):
-
-      torsoRotMatrix = multiplyMatrices(torsoMatrix,rot_x(-p));
-      torso.setMatrix(torsoRotMatrix); 
-      tailRotMatrix = multiplyMatrices(torsoRotMatrix,tailMatrix);
-      tail.setMatrix(tailRotMatrix);
-      headRotMatrix = multiplyMatrices(torsoRotMatrix,headAloneRotMatrix);
-      head.setMatrix(headRotMatrix);
-      noseRotMatrix = multiplyMatrices(headRotMatrix,noseMatrix);
-      nose.setMatrix(noseRotMatrix);
-      for(var i=0;i<9;i++){
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
-        lRTmesh[i].setMatrix(lRTRotMatrix[i]);
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
-        lLTmesh[i].setMatrix(lLTRotMatrix[i]);
-      }
-      for(var i=0;i<2;i++){
-        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
-        sRTmesh[i].setMatrix(smallRightTentRotMatrix);
-        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
-        sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
-      }
-      for(var i=0;i<4;i++){
-        pawRotMatrix[i] = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[i]);
-        pawMesh[i].setMatrix(pawRotMatrix[i]);
-      }
-      var k=0;
-      for(var i=0;i<4;i++){
-        for(var j=0;j<5;j++){
-          var clawRotMatrix = multiplyMatrices(pawRotMatrix[i],clawMatrix[k]);
-          clawMesh[k].setMatrix(clawRotMatrix);
-          k++;
-        }
-      }
+    case((key == "U" || key == "E" )&& animate):
+      torsoRotate(-p);
       break
-
 
       // head left/right
-      case((key == "H" || key == "G" ) && animate):
-      headAloneRotMatrix = multiplyMatrices(headMatrix,rot_y(-p));
-      headRotMatrix = multiplyMatrices(torsoRotMatrix,headAloneRotMatrix);
-      head.setMatrix(headRotMatrix); 
-      noseRotMatrix = multiplyMatrices(headRotMatrix,noseMatrix);
-      nose.setMatrix(noseRotMatrix);
-      for(var i=0;i<9;i++){
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
-        lRTmesh[i].setMatrix(lRTRotMatrix[i]);
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
-        lLTmesh[i].setMatrix(lLTRotMatrix[i]);
-      }
-      for(var i=0;i<2;i++){
-        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
-        sRTmesh[i].setMatrix(smallRightTentRotMatrix);
-        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
-        sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
-      }
+    case((key == "H" || key == "G" ) && animate):
+      headRotate(-p);
       break
-
 
       // tail left/right
-      case((key == "T" || key == "V" ) && animate):
-      tailAloneRotMatrix = multiplyMatrices(tailMatrix,rot_y(-p));
-      var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailAloneRotMatrix);
-      tail.setMatrix(tailFinalRotMatrix); 
+    case((key == "T" || key == "V" ) && animate):
+      tailRotate(-p);
       break
-
 
       // tentacles fan out
-      case((key == "N" ) && animate):
-      for(var i=0;i<9;i++){
-        lRTMalone[i] = multiplyMatrices(lRTM[i],rot_y(p));
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
-        lRTmesh[i].setMatrix(lRTRotMatrix[i]); 
-
-        lLTMalone[i] = multiplyMatrices(lLTM[i],rot_y(-p));
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
-        lLTmesh[i].setMatrix(lLTRotMatrix[i]);
-      }
-      for(var i=0;i<2;i++){
-        sRTMalone[i] = multiplyMatrices(sRTM[i],rot_y(p));
-        var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
-        sRTmesh[i].setMatrix(smallTentRightFinalRotMatrix); 
-
-        sLTMalone[i] = multiplyMatrices(sLTM[i],rot_y(-p));
-        var smallTentLeftFinalRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
-        sLTmesh[i].setMatrix(smallTentLeftFinalRotMatrix);
-      }
+    case((key == "N" ) && animate):
+      tentaclesRotate(p);
       break
 
-
-      // dig
-      case((key == "D" ) && animate):
-      pawAloneRotMatrix[0] = multiplyMatrices(pawMatrix[0],rot_x(p));
-      pawAloneRotMatrix[3] = multiplyMatrices(pawMatrix[3],rot_x(p));
-      var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[0]);
-      var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[3]);
-      pawMesh[0].setMatrix(rightPawFinalRotMatrix); 
-      pawMesh[3].setMatrix(leftPawFinalRotMatrix);
-      for(var i=0;i<5;i++){
-        var clawRotMatrix = multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]);
-        clawMesh[i].setMatrix(multiplyMatrices(clawRotMatrix,rot_x(p*5/4)));
-      }
-      for(var i=15;i<20;i++){
-        var clawRotMatrix = multiplyMatrices(leftPawFinalRotMatrix,clawMatrix[i]);
-        clawMesh[i].setMatrix(multiplyMatrices(clawRotMatrix,rot_x(p*5/4)));
-      }
-      break;
-
       // swim
-      case((key == "S" ) && animate):
+    case((key == "S" ) && animate):
       if (jumpcut){
         p = p1;
         pawAngle = 0
@@ -437,174 +325,119 @@ function updateBody() {
         headAngle = Math.PI/5
         tailStraightAngle = 0
       } else {
-      pawAngle = (Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
-      tailAngle = (2*Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
-      headAngle = (2*Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
-      tailStraightAngle = (-Math.PI/5)*((time-time_start)/time_length) + Math.PI/5;
+        pawAngle = (Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
+        tailAngle = (2*Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
+        headAngle = (2*Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
+        tailStraightAngle = (-Math.PI/5)*((time-time_start)/time_length) + Math.PI/5;
       }
 
-      var rightPawFinalRotMatrix;
-      var leftPawFinalRotMatrix;
       // first half swim
       if(sCount%3 == 0){
-        console.log("First");
+        rotatePaw(1,p);
+        rotatePaw(3,p);
 
-      var rightPawRotMatrix = multiplyMatrices(pawMatrix[1],rot_x(p));
-      var leftPawRotMatrix = multiplyMatrices(pawMatrix[3],rot_x(p));
-      rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
-      leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
-      pawMesh[1].setMatrix(rightPawFinalRotMatrix); 
-      pawMesh[3].setMatrix(leftPawFinalRotMatrix);
+        //head move right
+        headRotate(-p);
 
-      for(var i=5;i<10;i++){
-        clawMesh[i].setMatrix(multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]));
-      }
-      for(var i=15;i<20;i++){
-        clawMesh[i].setMatrix(multiplyMatrices(leftPawFinalRotMatrix,clawMatrix[i]));
-      }
+        //tail move left
+        tailRotate(-p);
 
-      //head move right
-      headAloneRotMatrix = multiplyMatrices(headMatrix,rot_y(-p));
-      headRotMatrix = multiplyMatrices(torsoRotMatrix,headAloneRotMatrix);
-      head.setMatrix(headRotMatrix); 
-      noseRotMatrix = multiplyMatrices(headRotMatrix,noseMatrix);
-      nose.setMatrix(noseRotMatrix);
-      for(var i=0;i<9;i++){
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTM[i]);
-        lRTmesh[i].setMatrix(lRTRotMatrix[i]);
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTM[i]);
-        lLTmesh[i].setMatrix(lLTRotMatrix[i]);
-      }
-      for(var i=0;i<2;i++){
-        var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTM[i]);
-        sRTmesh[i].setMatrix(smallRightTentRotMatrix);
-        var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTM[i]);
-        sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
-      }
-
-      //tail move left
-      tailRotMatrix = multiplyMatrices(tailMatrix,rot_y(-p));
-      var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailRotMatrix);
-      tail.setMatrix(tailFinalRotMatrix);
-
-      //tentacles fan out
-      for(var i=0;i<9;i++){
-        lRTMalone[i] = multiplyMatrices(lRTM[i],rot_y(p));
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
-        lRTmesh[i].setMatrix(lRTRotMatrix[i]); 
-
-        lLTMalone[i] = multiplyMatrices(lLTM[i],rot_y(-p));
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
-        lLTmesh[i].setMatrix(lLTRotMatrix[i]);
-      }
-      for(var i=0;i<2;i++){
-        sRTMalone[i] = multiplyMatrices(sRTM[i],rot_y(p));
-        var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
-        sRTmesh[i].setMatrix(smallTentRightFinalRotMatrix); 
-
-        sLTMalone[i] = multiplyMatrices(sLTM[i],rot_y(-p));
-        var smallTentLeftFinalRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
-        sLTmesh[i].setMatrix(smallTentLeftFinalRotMatrix);
-      }
+        //tentacles fan out
+        tentaclesRotate(p);
 
       }
 
       // next half swim
       else if (sCount%3 == 1){
-        console.log("Second");
+        rotatePaw(1,-pawAngle);
+        rotatePaw(3,-pawAngle);
 
-        //back to original postion for paws
-      var rightPawRotMatrix = multiplyMatrices(pawMatrix[1],rot_x(-pawAngle));
-      var leftPawRotMatrix = multiplyMatrices(pawMatrix[3],rot_x(-pawAngle));
-      var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
-      var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
-      pawMesh[1].setMatrix(rightPawFinalRotMatrix); 
-      pawMesh[3].setMatrix(leftPawFinalRotMatrix);
-      for(var i=5;i<10;i++){
-        clawMesh[i].setMatrix(multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]));
-      }
-      for(var i=15;i<20;i++){
-        clawMesh[i].setMatrix(multiplyMatrices(leftPawFinalRotMatrix,clawMatrix[i]));
-      }
-
-      //tail move all the way right
-      tailRotMatrix = multiplyMatrices(tailMatrix,rot_y(tailAngle));
-      var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailRotMatrix);
-      tail.setMatrix(tailFinalRotMatrix);
+        //tail move all the way right
+        tailRotate(tailAngle);
 
 
-      // activate opposite paws
-      var rightPawRotMatrix = multiplyMatrices(pawMatrix[0],rot_x(p));
-      var leftPawRotMatrix = multiplyMatrices(pawMatrix[2],rot_x(p));
-      var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
-      var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
-      pawMesh[0].setMatrix(rightPawFinalRotMatrix); 
-      pawMesh[2].setMatrix(leftPawFinalRotMatrix);
-      for(var i=0;i<5;i++){
-        clawMesh[i].setMatrix(multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]));
-      }
-      for(var i=10;i<15;i++){
-        clawMesh[i].setMatrix(multiplyMatrices(leftPawFinalRotMatrix,clawMatrix[i]));
-      }
+        // activate opposite paws
+        rotatePaw(0,p);
+        rotatePaw(2,p);
 
-      //tentacles stay open
-
-      //turn head all the way left
-      headRotate(headAngle);
+        //turn head all the way left
+        headRotate(headAngle);
 
       }
       // go to original
       else if(sCount%3 == 2){
-        console.log("Third");
-
         //back to original postion for paws
-      var rightPawRotMatrix = multiplyMatrices(pawMatrix[0],rot_x(-pawAngle));
-      var leftPawRotMatrix = multiplyMatrices(pawMatrix[2],rot_x(-pawAngle));
-      var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
-      var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,leftPawRotMatrix);
-      pawMesh[0].setMatrix(rightPawFinalRotMatrix); 
-      pawMesh[2].setMatrix(leftPawFinalRotMatrix);
-      for(var i=0;i<5;i++){
-        clawMesh[i].setMatrix(multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]));
+        rotatePaw(0,-pawAngle);
+        rotatePaw(2,-pawAngle);
+
+        // tail back to normal postion
+        tailRotate(tailStraightAngle);
+
+        // head back to original position
+        headRotate(-pawAngle);
+
+        //tentacles fan in
+        tentaclesRotate(-pawAngle);
       }
-      for(var i=10;i<15;i++){
-        clawMesh[i].setMatrix(multiplyMatrices(leftPawFinalRotMatrix,clawMatrix[i]));
-      }
-
-      // tail back to normal postion
-      tailRotMatrix = multiplyMatrices(tailMatrix,rot_y(tailStraightAngle));
-      var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailRotMatrix);
-      tail.setMatrix(tailFinalRotMatrix);
-
-      // head back to original position
-      headRotate(-pawAngle);
-
-      //tentacles fan in
-      for(var i=0;i<9;i++){
-        lRTMalone[i] = multiplyMatrices(lRTM[i],rot_y(-pawAngle));
-        lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
-        lRTmesh[i].setMatrix(lRTRotMatrix[i]); 
-
-        lLTMalone[i] = multiplyMatrices(lLTM[i],rot_y(pawAngle));
-        lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
-        lLTmesh[i].setMatrix(lLTRotMatrix[i]);
-      }
-      for(var i=0;i<2;i++){
-        sRTMalone[i] = multiplyMatrices(sRTM[i],rot_y(-pawAngle));
-        var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
-        sRTmesh[i].setMatrix(smallTentRightFinalRotMatrix); 
-
-        sLTMalone[i] = multiplyMatrices(sLTM[i],rot_y(pawAngle));
-        var smallTentLeftFinalRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
-        sLTmesh[i].setMatrix(smallTentLeftFinalRotMatrix);
-      }
-
-      }
-
       break;
 
-    default:
+    // custom digging motion
+    case((key == "D" ) && animate):
+      digPaw(0,p);
+      digPaw(3,p);
       break;
+
+      default:
+        break;
+    }
+}
+
+// Helper methods
+function rot_x(angle){
+    return new THREE.Matrix4().set(1,0,0,0, 0,Math.cos(angle),-Math.sin(angle),0, 0,Math.sin(angle),Math.cos(angle),0, 0,0,0,1);
+}
+function rot_z(angle){
+    return new THREE.Matrix4().set(Math.cos(angle),-Math.sin(angle),0,0, Math.sin(angle),Math.cos(angle),0,0, 0,0,1,0, 0,0,0,1);
+}
+function rot_y(angle){
+    return new THREE.Matrix4().set(Math.cos(angle),0,Math.sin(angle),0, 0,1,0,0,  -Math.sin(angle),0,Math.cos(angle),0, 0,0,0,1);
+}
+function multiplyMatrices(a,b){
+    return new THREE.Matrix4().multiplyMatrices(a, b);
+}
+
+function torsoRotate(angle){
+  torsoRotMatrix = multiplyMatrices(torsoMatrix,rot_x(angle));
+  torso.setMatrix(torsoRotMatrix); 
+  tailRotMatrix = multiplyMatrices(torsoRotMatrix,tailMatrix);
+  tail.setMatrix(tailRotMatrix);
+  headRotMatrix = multiplyMatrices(torsoRotMatrix,headAloneRotMatrix);
+  head.setMatrix(headRotMatrix);
+  noseRotMatrix = multiplyMatrices(headRotMatrix,noseMatrix);
+  nose.setMatrix(noseRotMatrix);
+  for(var i=0;i<9;i++){
+    lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
+    lRTmesh[i].setMatrix(lRTRotMatrix[i]);
+    lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
+    lLTmesh[i].setMatrix(lLTRotMatrix[i]);
+  }
+  for(var i=0;i<2;i++){
+    var smallRightTentRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
+    sRTmesh[i].setMatrix(smallRightTentRotMatrix);
+    var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
+    sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
+  }
+  for(var i=0;i<4;i++){
+    pawRotMatrix[i] = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[i]);
+    pawMesh[i].setMatrix(pawRotMatrix[i]);
+  }
+  var k=0;
+  for(var i=0;i<4;i++){
+    for(var j=0;j<5;j++){
+      var clawRotMatrix = multiplyMatrices(pawRotMatrix[i],clawMatrix[k]);
+      clawMesh[k].setMatrix(clawRotMatrix);
+      k++;
+    }
   }
 }
 
@@ -626,6 +459,52 @@ function headRotate(angle){
         var smallLeftTentRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
         sLTmesh[i].setMatrix(smallLeftTentRotMatrix);
       }
+}
+
+function tailRotate(angle){
+  tailAloneRotMatrix = multiplyMatrices(tailMatrix,rot_y(angle));
+  var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailAloneRotMatrix);
+  tail.setMatrix(tailFinalRotMatrix); 
+}
+
+function tentaclesRotate(angle){
+  for(var i=0;i<9;i++){
+    lRTMalone[i] = multiplyMatrices(lRTM[i],rot_y(angle));
+    lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
+    lRTmesh[i].setMatrix(lRTRotMatrix[i]); 
+
+    lLTMalone[i] = multiplyMatrices(lLTM[i],rot_y(-angle));
+    lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
+    lLTmesh[i].setMatrix(lLTRotMatrix[i]);
+  }
+  for(var i=0;i<2;i++){
+    sRTMalone[i] = multiplyMatrices(sRTM[i],rot_y(angle));
+    var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
+    sRTmesh[i].setMatrix(smallTentRightFinalRotMatrix); 
+
+    sLTMalone[i] = multiplyMatrices(sLTM[i],rot_y(-angle));
+    var smallTentLeftFinalRotMatrix = multiplyMatrices(noseRotMatrix,sLTMalone[i]);
+    sLTmesh[i].setMatrix(smallTentLeftFinalRotMatrix);
+  }
+}
+
+function rotatePaw(index, angle){
+  var rightPawRotMatrix = multiplyMatrices(pawMatrix[index],rot_x(angle));
+  var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
+  pawMesh[index].setMatrix(rightPawFinalRotMatrix); 
+  for(var i=5*index;i<5*index+5;i++){
+    clawMesh[i].setMatrix(multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]));
+  }
+}
+
+function digPaw(index, angle){
+  pawAloneRotMatrix[index] = multiplyMatrices(pawMatrix[index],rot_x(angle));
+  var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[index]);
+  pawMesh[index].setMatrix(rightPawFinalRotMatrix); 
+  for(var i=5*index;i<5*index+5;i++){
+    var clawRotMatrix = multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]);
+    clawMesh[i].setMatrix(multiplyMatrices(clawRotMatrix,rot_x(angle*5/4)));
+  }
 }
 
 // LISTEN TO KEYBOARD
