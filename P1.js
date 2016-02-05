@@ -137,12 +137,16 @@ for(var i=0;i<4;i++){
 // claws
 var clawMatrix = [];
 var clawMatrixFinal = [];
+var clawRotMatrix = [];
+var clawAloneMatrix = [];
 var k=0;
 for(var i=0;i<4;i++){
   var temp = pawMatrixFinal[i];
   for(var j=0;j<5;j++){
     clawMatrix[k] = new THREE.Matrix4().set(1,0,0,(j-2)/1.2, 0,1,0,-0.5, 0,0,1,5, 0,0,0,1);
     clawMatrixFinal[k] = multiplyMatrices(temp, clawMatrix[k]);
+    clawRotMatrix[k] = clawMatrixFinal[k];
+    clawAloneMatrix[k] = clawMatrix[k];
     k++;
   }
 }
@@ -418,8 +422,8 @@ function torsoRotate(angle){
   var k=0;
   for(var i=0;i<4;i++){
     for(var j=0;j<5;j++){
-      var clawRotMatrix = multiplyMatrices(pawRotMatrix[i],clawMatrix[k]);
-      clawMesh[k].setMatrix(clawRotMatrix);
+      clawRotMatrix[k] = multiplyMatrices(pawRotMatrix[i],clawAloneMatrix[k]);
+      clawMesh[k].setMatrix(clawRotMatrix[k]);
       k++;
     }
   }
@@ -477,7 +481,8 @@ function rotatePaw(index, angle){
   var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,rightPawRotMatrix);
   pawMesh[index].setMatrix(rightPawFinalRotMatrix); 
   for(var i=5*index;i<5*index+5;i++){
-    clawMesh[i].setMatrix(multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]));
+    clawRotMatrix[i] = multiplyMatrices(rightPawFinalRotMatrix,clawAloneMatrix[i]);
+    clawMesh[i].setMatrix(clawRotMatrix[i]);
   }
 }
 
@@ -486,8 +491,9 @@ function digPaw(index, angle){
   var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[index]);
   pawMesh[index].setMatrix(rightPawFinalRotMatrix); 
   for(var i=5*index;i<5*index+5;i++){
-    var clawRotMatrix = multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]);
-    clawMesh[i].setMatrix(multiplyMatrices(clawRotMatrix,rot_x(angle*5/4)));
+    clawAloneMatrix[i] = multiplyMatrices(clawMatrix[i],rot_x(angle*5/4));
+    clawRotMatrix[i] = multiplyMatrices(rightPawFinalRotMatrix,clawAloneMatrix[i]);
+    clawMesh[i].setMatrix(clawRotMatrix[i]);
   }
 }
 
