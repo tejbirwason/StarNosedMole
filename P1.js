@@ -304,19 +304,23 @@ function init_animation(p_start,p_end,t_length){
 }
 
 function updateBody() {
+  var time = clock.getElapsedTime(); // t seconds passed since the clock started.
+
+  if (time > time_end){
+    p = p1;
+    animate = false;
+    return;
+  }
+
+  if (jumpcut){
+    p = p1;
+  } else {
+    p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
+  }
   switch(true)
   {
       // body up/down
-      case((key == "U" || key == "E" )&& animate && !jumpcut):
-      var time = clock.getElapsedTime(); // t seconds passed since the clock started.
-
-      if (time > time_end){
-        p = p1;
-        animate = false;
-        break;
-      }
-
-      p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
+      case((key == "U" || key == "E" )&& animate):
 
       torsoRotMatrix = multiplyMatrices(torsoMatrix,rot_x(-p));
       torso.setMatrix(torsoRotMatrix); 
@@ -355,16 +359,6 @@ function updateBody() {
 
       // head left/right
       case((key == "H" || key == "G" ) && animate):
-      var time = clock.getElapsedTime(); // t seconds passed since the clock started.
-
-      if (time > time_end){
-        p = p1;
-        animate = false;
-        break;
-      }
-
-      p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
-
       headAloneRotMatrix = multiplyMatrices(headMatrix,rot_y(-p));
       headRotMatrix = multiplyMatrices(torsoRotMatrix,headAloneRotMatrix);
       head.setMatrix(headRotMatrix); 
@@ -387,16 +381,6 @@ function updateBody() {
 
       // tail left/right
       case((key == "T" || key == "V" ) && animate):
-      var time = clock.getElapsedTime(); // t seconds passed since the clock started.
-
-      if (time > time_end){
-        p = p1;
-        animate = false;
-        break;
-      }
-
-      p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
-
       tailAloneRotMatrix = multiplyMatrices(tailMatrix,rot_y(-p));
       var tailFinalRotMatrix = multiplyMatrices(torsoRotMatrix,tailAloneRotMatrix);
       tail.setMatrix(tailFinalRotMatrix); 
@@ -405,16 +389,6 @@ function updateBody() {
 
       // tentacles fan out
       case((key == "N" ) && animate):
-      var time = clock.getElapsedTime(); // t seconds passed since the clock started.
-
-      if (time > time_end){
-        p = p1;
-        animate = false;
-        break;
-      }
-
-      p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
-
       for(var i=0;i<9;i++){
         lRTMalone[i] = multiplyMatrices(lRTM[i],rot_y(p));
         lRTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lRTMalone[i]);
@@ -424,7 +398,6 @@ function updateBody() {
         lLTRotMatrix[i] = multiplyMatrices(noseRotMatrix,lLTMalone[i]);
         lLTmesh[i].setMatrix(lLTRotMatrix[i]);
       }
-
       for(var i=0;i<2;i++){
         sRTMalone[i] = multiplyMatrices(sRTM[i],rot_y(p));
         var smallTentRightFinalRotMatrix = multiplyMatrices(noseRotMatrix,sRTMalone[i]);
@@ -439,23 +412,12 @@ function updateBody() {
 
       // dig
       case((key == "D" ) && animate):
-      var time = clock.getElapsedTime(); // t seconds passed since the clock started.
-
-      if (time > time_end){
-        p = p1;
-        animate = false;
-        break;
-      }
-
-      p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
-
       pawAloneRotMatrix[0] = multiplyMatrices(pawMatrix[0],rot_x(p));
       pawAloneRotMatrix[3] = multiplyMatrices(pawMatrix[3],rot_x(p));
       var rightPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[0]);
       var leftPawFinalRotMatrix = multiplyMatrices(torsoRotMatrix,pawAloneRotMatrix[3]);
       pawMesh[0].setMatrix(rightPawFinalRotMatrix); 
       pawMesh[3].setMatrix(leftPawFinalRotMatrix);
-
       for(var i=0;i<5;i++){
         var clawRotMatrix = multiplyMatrices(rightPawFinalRotMatrix,clawMatrix[i]);
         clawMesh[i].setMatrix(multiplyMatrices(clawRotMatrix,rot_x(p*5/4)));
@@ -468,23 +430,18 @@ function updateBody() {
 
       // swim
       case((key == "S" ) && animate):
-      var time = clock.getElapsedTime(); // t seconds passed since the clock started.
-
-      if (time > time_end){
+      if (jumpcut){
         p = p1;
-        animate = false;
-        break;
-      }
-
-      p = (p1 - p0)*((time-time_start)/time_length) + p0; // current frame 
-
+        pawAngle = 0
+        tailAngle = Math.PI/5
+        headAngle = Math.PI/5
+        tailStraightAngle = 0
+      } else {
       pawAngle = (Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
-
       tailAngle = (2*Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
-
       headAngle = (2*Math.PI/5)*((time-time_start)/time_length) - Math.PI/5;
-
       tailStraightAngle = (-Math.PI/5)*((time-time_start)/time_length) + Math.PI/5;
+      }
 
       var rightPawFinalRotMatrix;
       var leftPawFinalRotMatrix;
@@ -644,11 +601,7 @@ function updateBody() {
 
       }
 
-      break
-      // TO-DO: IMPLEMENT JUMPCUT/ANIMATION FOR EACH KEY!
-      // Note: Remember spacebar sets jumpcut/animate!
-      
-
+      break;
 
     default:
       break;
@@ -714,13 +667,7 @@ keyboard.domElement.addEventListener('keydown',function(event){
       key = "S"; 
       sCount++;
   } 
-  // TO-DO: BIND KEYS TO YOUR JUMP CUTS AND ANIMATIONS
-  // Note: Remember spacebar sets jumpcut/animate! 
-  // Hint: Look up "threex.keyboardstate by Jerome Tienne" for more info.
-
-
-
-    });
+});
 
 // SETUP UPDATE CALL-BACK
 // Hint: It is useful to understand what is being updated here, the effect, and why.
